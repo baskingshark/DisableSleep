@@ -8,4 +8,8 @@ public:
     virtual IOService *probe(IOService *provider, SInt32 *score);
     virtual bool start(IOService *provider);
     virtual void stop(IOService *provider);
+private:
+    IOPMrootDomain *pRootDomain;
+    bool clamshellSleep(bool enable);
+    void sleepDisabledDictionarySetting(bool enable);
 };
