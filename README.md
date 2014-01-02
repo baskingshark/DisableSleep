@@ -1,5 +1,5 @@
 #DisableSleep
-A simple non-configurable kernel extension to prevent sleep
+A simple non-configurable OSX kernel extension to prevent sleep
 
 ## See Also
 * https://github.com/integralpro/nosleep
