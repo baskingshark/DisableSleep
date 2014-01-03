@@ -1,7 +1,9 @@
-all:
+all: clean
 	xcodebuild -scheme Release install DSTROOT=Build/Release/root
 	xcodebuild -scheme Debug   install DSTROOT=Build/Debug/root
 clean:
+	xcodebuild -scheme Release clean DSTROOT=Build/Release/root
+	xcodebuild -scheme Debug clean DSTROOT=Build/Debug/root
 	rm -rf Build
 dbgpkg: all
 	mkdir -p Build/Debug/root/Library/LaunchDaemons

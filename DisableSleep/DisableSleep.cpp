@@ -89,7 +89,7 @@ bool github_sheeparegreat_DisableSleep::start(IOService *provider)
 
 #ifdef DEBUG
     if(result == true)
-        IOLog("%s[%p]::%s DisableSleep started sucessfully\n", getName(), this, __FUNCTION__);
+        IOLog("%s[%p]::%s DisableSleep started\n", getName(), this, __FUNCTION__);
 #endif
 
     return result;

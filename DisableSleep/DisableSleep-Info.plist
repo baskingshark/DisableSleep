@@ -43,9 +43,9 @@
 	<key>OSBundleLibraries</key>
 	<dict>
 		<key>com.apple.kpi.iokit</key>
-		<string>12.4</string>
+		<string>7.0</string>
 		<key>com.apple.kpi.libkern</key>
-		<string>12.4</string>
+		<string>8.0d0</string>
 	</dict>
 </dict>
 </plist>
