@@ -56,12 +56,23 @@ void github_sheeparegreat_DisableSleep::sleepDisabledDictionarySetting(bool enab
 #endif
     
     const OSSymbol *sleepdisabled_string = OSSymbol::withCString("SleepDisabled");
-    
-    const OSObject *objects[] = { OSBoolean::withBoolean(enable) };
-    const OSSymbol *keys[] = { sleepdisabled_string };
-    OSDictionary *dict = OSDictionary::withObjects(objects, keys, 1);
-    pRootDomain->setProperties(dict);
-    dict->release();
+
+    if(sleepdisabled_string) {
+        const OSObject *objects[] = { OSBoolean::withBoolean(enable) };
+        const OSSymbol *keys[] = { sleepdisabled_string };
+        OSDictionary *dict = OSDictionary::withObjects(objects, keys, 1);
+        if(dict) {
+            pRootDomain->setProperties(dict);
+            dict->release();
+        }
+        else
+            IOLog("%s[%p]::%s error creating OSDictionary\n",
+                  getName(), this, __FUNCTION__);
+        sleepdisabled_string->release();
+    }
+    else
+        IOLog("%s[%p]::%s error creating OSSymbol",
+              getName(), this, __FUNCTION__);
 }
 
 bool github_sheeparegreat_DisableSleep::start(IOService *provider)
