@@ -11,6 +11,36 @@ OSDefineMetaClassAndStructors(github_sheeparegreat_DisableSleep, IOService)
 // Define the driver's superclass.
 #define super IOService
 
+// Define Power States for the driver
+static IOPMPowerState PowerStates[] = {
+    {
+        /* version */
+        kIOPMPowerStateVersion1,
+        /* capabilityFlags */
+        kIOPMPowerOn | kIOPMPreventIdleSleep | kIOPMPreventSystemSleep,
+        /* outputPowerCharacter */
+        kIOPMPowerOn,
+        /* inputPowerRequirement */
+        kIOPMPowerOn,
+        /* staticPower */
+        0,
+        /* unbudgetedPower */
+        0,
+        /* powerToAttain */
+        0,
+        /* timeToAttain */
+        0,
+        /* settleUpTime */
+        0,
+        /* timeToLower */
+        0,
+        /* settleDownTime */
+        0,
+        /* powerDomainBudget */
+        0
+    }
+};
+
 bool github_sheeparegreat_DisableSleep::init(OSDictionary *dict)
 {
     // Calling getName() in this fuction causes Kernel Panic
@@ -93,7 +123,13 @@ bool github_sheeparegreat_DisableSleep::start(IOService *provider)
 #endif
         return false;
     }
-    
+
+    // Start and configure power management
+    PMinit();
+    provider->joinPMtree(this);
+    registerPowerDriver(this, PowerStates,
+                        sizeof(PowerStates)/sizeof(IOPMPowerState));
+
     sleepDisabledDictionarySetting(true);
     clamshellSleep(false);
 
@@ -112,5 +148,9 @@ void github_sheeparegreat_DisableSleep::stop(IOService *provider)
 
     sleepDisabledDictionarySetting(false);
     clamshellSleep(true);
+
+    // Stop power management
+    PMstop();
+
     super::stop(provider);
 }
