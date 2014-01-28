@@ -127,6 +127,10 @@ bool github_sheeparegreat_DisableSleep::start(IOService *provider)
     sleepDisabledDictionarySetting(true);
     clamshellSleep(false);
 
+    // Start the registration process ...
+    // This makes the driver appear as registerd
+    registerService();
+
     DLOG("%s[%p]::%s DisableSleep started\n", getName(), this, __FUNCTION__);
 
     return result;
