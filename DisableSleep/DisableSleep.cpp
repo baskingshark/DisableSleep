@@ -4,6 +4,12 @@
 #include <IOKit/pwr_mgt/IOPM.h>
 #include <IOKit/pwr_mgt/RootDomain.h>
 
+#ifdef DEBUG
+#define DLOG(fmt, ...) IOLog(fmt, ## __VA_ARGS__)
+#else
+#define DLOG(fmt, ...)
+#endif
+
 // This required macro defines the class's constructors, destructors,
 // and several other methods I/O Kit requires.
 OSDefineMetaClassAndStructors(github_sheeparegreat_DisableSleep, IOService)
@@ -50,30 +56,24 @@ bool github_sheeparegreat_DisableSleep::init(OSDictionary *dict)
 
 void github_sheeparegreat_DisableSleep::free(void)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s\n", getName(), this, __FUNCTION__);
-#endif
-    
+    DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
+
     super::free();
 }
 
 IOService *github_sheeparegreat_DisableSleep::probe(IOService *provider,
                                     SInt32 *score)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s\n", getName(), this, __FUNCTION__);
-#endif
-    
+    DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
+
     IOService *result = super::probe(provider, score);
     return result;
 }
 
 bool github_sheeparegreat_DisableSleep::clamshellSleep(bool enable)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s(%d)\n", getName(), this, __FUNCTION__, enable ? 1 : 0);
-#endif
-    
+    DLOG("%s[%p]::%s(%d)\n", getName(), this, __FUNCTION__, enable ? 1 : 0);
+
     pRootDomain->receivePowerNotification( enable ? kIOPMEnableClamshell : kIOPMDisableClamshell );
     
     return true;
@@ -81,10 +81,8 @@ bool github_sheeparegreat_DisableSleep::clamshellSleep(bool enable)
 
 void github_sheeparegreat_DisableSleep::sleepDisabledDictionarySetting(bool enable)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s(%d)\n", getName(), this, __FUNCTION__, enable ? 1 : 0);
-#endif
-    
+    DLOG("%s[%p]::%s(%d)\n", getName(), this, __FUNCTION__, enable ? 1 : 0);
+
     const OSSymbol *sleepdisabled_string = OSSymbol::withCString("SleepDisabled");
 
     if(sleepdisabled_string) {
@@ -107,9 +105,7 @@ void github_sheeparegreat_DisableSleep::sleepDisabledDictionarySetting(bool enab
 
 bool github_sheeparegreat_DisableSleep::start(IOService *provider)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s\n", getName(), this, __FUNCTION__);
-#endif
+    DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
 
     bool result = super::start(provider);
     if(!result)
@@ -118,9 +114,7 @@ bool github_sheeparegreat_DisableSleep::start(IOService *provider)
     pRootDomain = getPMRootDomain();
     
     if(!pRootDomain){
-#ifdef DEBUG
-        IOLog("%s[%p]::%s error calling getPMRootDomain()\n", getName(), this, __FUNCTION__);
-#endif
+        DLOG("%s[%p]::%s error calling getPMRootDomain()\n", getName(), this, __FUNCTION__);
         return false;
     }
 
@@ -133,18 +127,14 @@ bool github_sheeparegreat_DisableSleep::start(IOService *provider)
     sleepDisabledDictionarySetting(true);
     clamshellSleep(false);
 
-#ifdef DEBUG
-    IOLog("%s[%p]::%s DisableSleep started\n", getName(), this, __FUNCTION__);
-#endif
+    DLOG("%s[%p]::%s DisableSleep started\n", getName(), this, __FUNCTION__);
 
     return result;
 }
 
 void github_sheeparegreat_DisableSleep::stop(IOService *provider)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s\n", getName(), this, __FUNCTION__);
-#endif
+    DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
 
     sleepDisabledDictionarySetting(false);
     clamshellSleep(true);
