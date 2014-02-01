@@ -10,6 +10,15 @@ public:
     virtual void stop(IOService *provider);
 private:
     IOPMrootDomain *pRootDomain;
+    IONotifier *pGeneralInterestNotifier;
+
     bool clamshellSleep(bool enable);
     void sleepDisabledDictionarySetting(bool enable);
+
+    static IOReturn interestHandler(void *target,
+                                    void *refCon,
+                                    UInt32 messageType,
+                                    IOService *provider,
+                                    void *messageArgument,
+                                    vm_size_t argSize);
 };

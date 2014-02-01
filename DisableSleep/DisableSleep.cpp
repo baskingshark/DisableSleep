@@ -124,8 +124,12 @@ bool github_sheeparegreat_DisableSleep::start(IOService *provider)
     registerPowerDriver(this, PowerStates,
                         sizeof(PowerStates)/sizeof(IOPMPowerState));
 
+    // Register for general interest notifications
+    pGeneralInterestNotifier = pRootDomain->registerInterest(gIOGeneralInterest,
+                                                             interestHandler,
+                                                             this);
+
     sleepDisabledDictionarySetting(true);
-    clamshellSleep(false);
 
     // Start the registration process ...
     // This makes the driver appear as registerd
@@ -140,6 +144,11 @@ void github_sheeparegreat_DisableSleep::stop(IOService *provider)
 {
     DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
 
+    // Unregister general interest notifier
+    // Need to do this before re-enabling clamshell sleep
+    if(pGeneralInterestNotifier)
+        pGeneralInterestNotifier->remove();
+
     sleepDisabledDictionarySetting(false);
     clamshellSleep(true);
 
@@ -147,4 +156,35 @@ void github_sheeparegreat_DisableSleep::stop(IOService *provider)
     PMstop();
 
     super::stop(provider);
+}
+
+IOReturn
+github_sheeparegreat_DisableSleep::interestHandler(void *target,
+                                                   void *refCon,
+                                                   UInt32 messageType,
+                                                   IOService *provider,
+                                                   void *messageArgument,
+                                                   vm_size_t argSize)
+{
+    if(kIOPMMessageClamshellStateChange == messageType) {
+        /* Clamshell state change ...
+         * Generated when either AppleClamshellState or
+         * AppleClamshellCausesSleep changes.
+         *
+         * State of both variables is encoded in messageArgument - check
+         * kClamshellStateBit & kClamshellSleepBit
+         */
+        github_sheeparegreat_DisableSleep *self =
+            (github_sheeparegreat_DisableSleep*) target;
+        bool sleep = (bool)((uintptr_t)messageArgument & kClamshellSleepBit);
+        bool closed = (bool)((uintptr_t)messageArgument & kClamshellStateBit);
+
+        // If AppleClamshellCausesSleep is set, then disable it
+        if(sleep)
+            self->clamshellSleep(false);
+
+        DLOG("%s[%p]::%s closed = %d, sleep = %d\n",
+             self->getName(), self, __FUNCTION__, closed, sleep);
+    }
+    return kIOReturnSuccess;
 }
