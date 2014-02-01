@@ -150,7 +150,10 @@ void github_sheeparegreat_DisableSleep::stop(IOService *provider)
         pGeneralInterestNotifier->remove();
 
     sleepDisabledDictionarySetting(false);
-    clamshellSleep(true);
+    // Set clamshell sleep state based on whether we have a clamshell
+    if(pRootDomain->getProperty(kAppleClamshellCausesSleepKey) ||
+       pRootDomain->getProperty(kAppleClamshellStateKey))
+        clamshellSleep(true);
 
     // Stop power management
     PMstop();
