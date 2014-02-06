@@ -47,22 +47,21 @@ static IOPMPowerState PowerStates[] = {
     }
 };
 
-bool github_sheeparegreat_DisableSleep::init(OSDictionary *dict)
+bool DisableSleep::init(OSDictionary *dict)
 {
     // Calling getName() in this fuction causes Kernel Panic
     bool result = super::init(dict);
     return result;
 }
 
-void github_sheeparegreat_DisableSleep::free(void)
+void DisableSleep::free(void)
 {
     DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
 
     super::free();
 }
 
-IOService *github_sheeparegreat_DisableSleep::probe(IOService *provider,
-                                    SInt32 *score)
+IOService *DisableSleep::probe(IOService *provider, SInt32 *score)
 {
     DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
 
@@ -70,7 +69,7 @@ IOService *github_sheeparegreat_DisableSleep::probe(IOService *provider,
     return result;
 }
 
-bool github_sheeparegreat_DisableSleep::clamshellSleep(bool enable)
+bool DisableSleep::clamshellSleep(bool enable)
 {
     DLOG("%s[%p]::%s(%d)\n", getName(), this, __FUNCTION__, enable ? 1 : 0);
 
@@ -79,7 +78,7 @@ bool github_sheeparegreat_DisableSleep::clamshellSleep(bool enable)
     return true;
 }
 
-void github_sheeparegreat_DisableSleep::sleepDisabledDictionarySetting(bool enable)
+void DisableSleep::sleepDisabledDictionarySetting(bool enable)
 {
     DLOG("%s[%p]::%s(%d)\n", getName(), this, __FUNCTION__, enable ? 1 : 0);
 
@@ -103,7 +102,7 @@ void github_sheeparegreat_DisableSleep::sleepDisabledDictionarySetting(bool enab
               getName(), this, __FUNCTION__);
 }
 
-bool github_sheeparegreat_DisableSleep::start(IOService *provider)
+bool DisableSleep::start(IOService *provider)
 {
     DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
 
@@ -140,7 +139,7 @@ bool github_sheeparegreat_DisableSleep::start(IOService *provider)
     return result;
 }
 
-void github_sheeparegreat_DisableSleep::stop(IOService *provider)
+void DisableSleep::stop(IOService *provider)
 {
     DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
 
@@ -162,12 +161,12 @@ void github_sheeparegreat_DisableSleep::stop(IOService *provider)
 }
 
 IOReturn
-github_sheeparegreat_DisableSleep::interestHandler(void *target,
-                                                   void *refCon,
-                                                   UInt32 messageType,
-                                                   IOService *provider,
-                                                   void *messageArgument,
-                                                   vm_size_t argSize)
+DisableSleep::interestHandler(void *target,
+                              void *refCon,
+                              UInt32 messageType,
+                              IOService *provider,
+                              void *messageArgument,
+                              vm_size_t argSize)
 {
     if(kIOPMMessageClamshellStateChange == messageType) {
         /* Clamshell state change ...
@@ -177,8 +176,7 @@ github_sheeparegreat_DisableSleep::interestHandler(void *target,
          * State of both variables is encoded in messageArgument - check
          * kClamshellStateBit & kClamshellSleepBit
          */
-        github_sheeparegreat_DisableSleep *self =
-            (github_sheeparegreat_DisableSleep*) target;
+        DisableSleep *self = (DisableSleep*) target;
         bool sleep = (bool)((uintptr_t)messageArgument & kClamshellSleepBit);
         bool closed = (bool)((uintptr_t)messageArgument & kClamshellStateBit);
 

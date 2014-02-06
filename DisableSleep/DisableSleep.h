@@ -1,5 +1,8 @@
 #include <IOKit/IOService.h>
-class github_sheeparegreat_DisableSleep : public IOService
+
+#define DisableSleep github_sheeparegreat_DisableSleep
+
+class DisableSleep : public IOService
 {
     OSDeclareDefaultStructors(github_sheeparegreat_DisableSleep)
 public:
