@@ -4,6 +4,8 @@
 #include <IOKit/pwr_mgt/IOPM.h>
 #include <IOKit/pwr_mgt/RootDomain.h>
 
+#include "Dictionary.h"
+
 #ifdef DEBUG
 #define DLOG(fmt, ...) IOLog(fmt, ## __VA_ARGS__)
 #else
@@ -130,6 +132,9 @@ bool DisableSleep::start(IOService *provider)
 
     sleepDisabledDictionarySetting(true);
 
+    // Prevent changes to SleepDisabled setting
+    pRootDomain->runPropertyAction(hookRootDomainProperties, this);
+
     // Start the registration process ...
     // This makes the driver appear as registerd
     registerService();
@@ -142,6 +147,9 @@ bool DisableSleep::start(IOService *provider)
 void DisableSleep::stop(IOService *provider)
 {
     DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
+
+    // Unhook property table on pRootDomain
+    pRootDomain->runPropertyAction(unhookRootDomainProperties, this);
 
     // Unregister general interest notifier
     // Need to do this before re-enabling clamshell sleep
@@ -188,4 +196,65 @@ DisableSleep::interestHandler(void *target,
              self->getName(), self, __FUNCTION__, closed, sleep);
     }
     return kIOReturnSuccess;
+}
+
+IOReturn
+DisableSleep::hookRootDomainProperties(OSObject *target,
+                                       void     *arg0,
+                                       void     *arg1,
+                                       void     *arg2,
+                                       void     *arg3)
+{
+    DisableSleep *me = OSDynamicCast(DisableSleep, target);
+
+    if(!me)
+        return kIOReturnInternalError;
+
+    OSDictionary *cur = me->pRootDomain->getPropertyTable();
+    if(cur) {
+        Dictionary *propTable =
+            Dictionary::withDictionary(cur, sleepDisabledChanged, me);
+        if(propTable) {
+            me->pRootDomain->setPropertyTable(propTable);
+            propTable->release();
+            return kIOReturnSuccess;
+        }
+        return kIOReturnNoMemory;
+    }
+    return kIOReturnInternalError;
+}
+
+IOReturn
+DisableSleep::unhookRootDomainProperties(OSObject *target,
+                                         void     *arg0,
+                                         void     *arg1,
+                                         void     *arg2,
+                                         void     *arg3)
+{
+    DisableSleep *me = OSDynamicCast(DisableSleep, target);
+
+    if(!me)
+        return kIOReturnInternalError;
+
+    // Check that the current property table is one of ours.
+    Dictionary *cur = OSDynamicCast(Dictionary,
+                                    me->pRootDomain->getPropertyTable());
+    if(cur) {
+        // setPropertyTable releases current Dictionary when a new one is set
+        cur->retain();
+        me->pRootDomain->setPropertyTable(cur->getBaseDictionary());
+        cur->release();
+    }
+    return kIOReturnSuccess;
+}
+
+void
+DisableSleep::sleepDisabledChanged(OSObject              *target,
+                                   const Dictionary      *aDictionary,
+                                   const OSSymbol        *aKey,
+                                   const OSMetaClassBase *aValue)
+{
+    DisableSleep *me = (DisableSleep*)target;
+    if(aValue != kOSBooleanTrue)
+        me->sleepDisabledDictionarySetting(true);
 }
