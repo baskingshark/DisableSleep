@@ -7,11 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		426E8925189EC4D8001FD5A3 /* Dictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 426E8923189EC4D8001FD5A3 /* Dictionary.cpp */; };
+		426E8926189EC4D8001FD5A3 /* Dictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 426E8924189EC4D8001FD5A3 /* Dictionary.h */; };
 		CC529B20187312FA005BF6E2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = CC529B1E187312FA005BF6E2 /* InfoPlist.strings */; };
 		CC529B23187312FA005BF6E2 /* DisableSleep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC529B22187312FA005BF6E2 /* DisableSleep.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		426E8923189EC4D8001FD5A3 /* Dictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Dictionary.cpp; sourceTree = "<group>"; };
+		426E8924189EC4D8001FD5A3 /* Dictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Dictionary.h; sourceTree = "<group>"; };
 		CC529B16187312FA005BF6E2 /* DisableSleep.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DisableSleep.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC529B1A187312FA005BF6E2 /* Kernel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Kernel.framework; path = System/Library/Frameworks/Kernel.framework; sourceTree = SDKROOT; };
 		CC529B1D187312FA005BF6E2 /* DisableSleep-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "DisableSleep-Info.plist"; sourceTree = "<group>"; };
@@ -70,6 +74,8 @@
 			children = (
 				CC529B21187312FA005BF6E2 /* DisableSleep.h */,
 				CC529B22187312FA005BF6E2 /* DisableSleep.cpp */,
+				426E8924189EC4D8001FD5A3 /* Dictionary.h */,
+				426E8923189EC4D8001FD5A3 /* Dictionary.cpp */,
 				CC529B1C187312FA005BF6E2 /* Supporting Files */,
 			);
 			path = DisableSleep;
@@ -92,6 +98,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				426E8926189EC4D8001FD5A3 /* Dictionary.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -170,6 +177,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC529B23187312FA005BF6E2 /* DisableSleep.cpp in Sources */,
+				426E8925189EC4D8001FD5A3 /* Dictionary.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

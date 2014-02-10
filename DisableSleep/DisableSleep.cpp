@@ -4,6 +4,14 @@
 #include <IOKit/pwr_mgt/IOPM.h>
 #include <IOKit/pwr_mgt/RootDomain.h>
 
+#include "Dictionary.h"
+
+#ifdef DEBUG
+#define DLOG(fmt, ...) IOLog(fmt, ## __VA_ARGS__)
+#else
+#define DLOG(fmt, ...)
+#endif
+
 // This required macro defines the class's constructors, destructors,
 // and several other methods I/O Kit requires.
 OSDefineMetaClassAndStructors(github_sheeparegreat_DisableSleep, IOService)
@@ -11,97 +19,242 @@ OSDefineMetaClassAndStructors(github_sheeparegreat_DisableSleep, IOService)
 // Define the driver's superclass.
 #define super IOService
 
-bool github_sheeparegreat_DisableSleep::init(OSDictionary *dict)
+// Define Power States for the driver
+static IOPMPowerState PowerStates[] = {
+    {
+        /* version */
+        kIOPMPowerStateVersion1,
+        /* capabilityFlags */
+        kIOPMPowerOn | kIOPMPreventIdleSleep | kIOPMPreventSystemSleep,
+        /* outputPowerCharacter */
+        kIOPMPowerOn,
+        /* inputPowerRequirement */
+        kIOPMPowerOn,
+        /* staticPower */
+        0,
+        /* unbudgetedPower */
+        0,
+        /* powerToAttain */
+        0,
+        /* timeToAttain */
+        0,
+        /* settleUpTime */
+        0,
+        /* timeToLower */
+        0,
+        /* settleDownTime */
+        0,
+        /* powerDomainBudget */
+        0
+    }
+};
+
+bool DisableSleep::init(OSDictionary *dict)
 {
     // Calling getName() in this fuction causes Kernel Panic
     bool result = super::init(dict);
     return result;
 }
 
-void github_sheeparegreat_DisableSleep::free(void)
+void DisableSleep::free(void)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s\n", getName(), this, __FUNCTION__);
-#endif
-    
+    DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
+
     super::free();
 }
 
-IOService *github_sheeparegreat_DisableSleep::probe(IOService *provider,
-                                    SInt32 *score)
+IOService *DisableSleep::probe(IOService *provider, SInt32 *score)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s\n", getName(), this, __FUNCTION__);
-#endif
-    
+    DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
+
     IOService *result = super::probe(provider, score);
     return result;
 }
 
-bool github_sheeparegreat_DisableSleep::clamshellSleep(bool enable)
+bool DisableSleep::clamshellSleep(bool enable)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s(%d)\n", getName(), this, __FUNCTION__, enable ? 1 : 0);
-#endif
-    
+    DLOG("%s[%p]::%s(%d)\n", getName(), this, __FUNCTION__, enable ? 1 : 0);
+
     pRootDomain->receivePowerNotification( enable ? kIOPMEnableClamshell : kIOPMDisableClamshell );
     
     return true;
 }
 
-void github_sheeparegreat_DisableSleep::sleepDisabledDictionarySetting(bool enable)
+void DisableSleep::sleepDisabledDictionarySetting(bool enable)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s(%d)\n", getName(), this, __FUNCTION__, enable ? 1 : 0);
-#endif
-    
+    DLOG("%s[%p]::%s(%d)\n", getName(), this, __FUNCTION__, enable ? 1 : 0);
+
     const OSSymbol *sleepdisabled_string = OSSymbol::withCString("SleepDisabled");
-    
-    const OSObject *objects[] = { OSBoolean::withBoolean(enable) };
-    const OSSymbol *keys[] = { sleepdisabled_string };
-    OSDictionary *dict = OSDictionary::withObjects(objects, keys, 1);
-    pRootDomain->setProperties(dict);
-    dict->release();
+
+    if(sleepdisabled_string) {
+        const OSObject *objects[] = { OSBoolean::withBoolean(enable) };
+        const OSSymbol *keys[] = { sleepdisabled_string };
+        OSDictionary *dict = OSDictionary::withObjects(objects, keys, 1);
+        if(dict) {
+            pRootDomain->setProperties(dict);
+            dict->release();
+        }
+        else
+            IOLog("%s[%p]::%s error creating OSDictionary\n",
+                  getName(), this, __FUNCTION__);
+        sleepdisabled_string->release();
+    }
+    else
+        IOLog("%s[%p]::%s error creating OSSymbol",
+              getName(), this, __FUNCTION__);
 }
 
-bool github_sheeparegreat_DisableSleep::start(IOService *provider)
+bool DisableSleep::start(IOService *provider)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s\n", getName(), this, __FUNCTION__);
-#endif
+    DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
 
-    if( !super::start( provider ))
-        return( false );
+    bool result = super::start(provider);
+    if(!result)
+        return false;
     
     pRootDomain = getPMRootDomain();
     
     if(!pRootDomain){
-#ifdef DEBUG
-        IOLog("%s[%p]::%s error calling getPMRootDomain()\n", getName(), this, __FUNCTION__);
-#endif
+        DLOG("%s[%p]::%s error calling getPMRootDomain()\n", getName(), this, __FUNCTION__);
         return false;
     }
-    
-    sleepDisabledDictionarySetting(true);
-    clamshellSleep(false);
-    
-    bool result = super::start(provider);
 
-#ifdef DEBUG
-    if(result == true)
-        IOLog("%s[%p]::%s DisableSleep started\n", getName(), this, __FUNCTION__);
-#endif
+    // Start and configure power management
+    PMinit();
+    provider->joinPMtree(this);
+    registerPowerDriver(this, PowerStates,
+                        sizeof(PowerStates)/sizeof(IOPMPowerState));
+
+    // Register for general interest notifications
+    pGeneralInterestNotifier = pRootDomain->registerInterest(gIOGeneralInterest,
+                                                             interestHandler,
+                                                             this);
+
+    sleepDisabledDictionarySetting(true);
+
+    // Prevent changes to SleepDisabled setting
+    pRootDomain->runPropertyAction(hookRootDomainProperties, this);
+
+    // Start the registration process ...
+    // This makes the driver appear as registerd
+    registerService();
+
+    DLOG("%s[%p]::%s DisableSleep started\n", getName(), this, __FUNCTION__);
 
     return result;
 }
 
-void github_sheeparegreat_DisableSleep::stop(IOService *provider)
+void DisableSleep::stop(IOService *provider)
 {
-#ifdef DEBUG
-    IOLog("%s[%p]::%s\n", getName(), this, __FUNCTION__);
-#endif
+    DLOG("%s[%p]::%s\n", getName(), this, __FUNCTION__);
+
+    // Unhook property table on pRootDomain
+    pRootDomain->runPropertyAction(unhookRootDomainProperties, this);
+
+    // Unregister general interest notifier
+    // Need to do this before re-enabling clamshell sleep
+    if(pGeneralInterestNotifier)
+        pGeneralInterestNotifier->remove();
 
     sleepDisabledDictionarySetting(false);
-    clamshellSleep(true);
+    // Set clamshell sleep state based on whether we have a clamshell
+    if(pRootDomain->getProperty(kAppleClamshellCausesSleepKey) ||
+       pRootDomain->getProperty(kAppleClamshellStateKey))
+        clamshellSleep(true);
+
+    // Stop power management
+    PMstop();
+
     super::stop(provider);
+}
+
+IOReturn
+DisableSleep::interestHandler(void *target,
+                              void *refCon,
+                              UInt32 messageType,
+                              IOService *provider,
+                              void *messageArgument,
+                              vm_size_t argSize)
+{
+    if(kIOPMMessageClamshellStateChange == messageType) {
+        /* Clamshell state change ...
+         * Generated when either AppleClamshellState or
+         * AppleClamshellCausesSleep changes.
+         *
+         * State of both variables is encoded in messageArgument - check
+         * kClamshellStateBit & kClamshellSleepBit
+         */
+        DisableSleep *self = (DisableSleep*) target;
+        bool sleep = (bool)((uintptr_t)messageArgument & kClamshellSleepBit);
+        bool closed = (bool)((uintptr_t)messageArgument & kClamshellStateBit);
+
+        // If AppleClamshellCausesSleep is set, then disable it
+        if(sleep)
+            self->clamshellSleep(false);
+
+        DLOG("%s[%p]::%s closed = %d, sleep = %d\n",
+             self->getName(), self, __FUNCTION__, closed, sleep);
+    }
+    return kIOReturnSuccess;
+}
+
+IOReturn
+DisableSleep::hookRootDomainProperties(OSObject *target,
+                                       void     *arg0,
+                                       void     *arg1,
+                                       void     *arg2,
+                                       void     *arg3)
+{
+    DisableSleep *me = OSDynamicCast(DisableSleep, target);
+
+    if(!me)
+        return kIOReturnInternalError;
+
+    OSDictionary *cur = me->pRootDomain->getPropertyTable();
+    if(cur) {
+        Dictionary *propTable =
+            Dictionary::withDictionary(cur, sleepDisabledChanged, me);
+        if(propTable) {
+            me->pRootDomain->setPropertyTable(propTable);
+            propTable->release();
+            return kIOReturnSuccess;
+        }
+        return kIOReturnNoMemory;
+    }
+    return kIOReturnInternalError;
+}
+
+IOReturn
+DisableSleep::unhookRootDomainProperties(OSObject *target,
+                                         void     *arg0,
+                                         void     *arg1,
+                                         void     *arg2,
+                                         void     *arg3)
+{
+    DisableSleep *me = OSDynamicCast(DisableSleep, target);
+
+    if(!me)
+        return kIOReturnInternalError;
+
+    // Check that the current property table is one of ours.
+    Dictionary *cur = OSDynamicCast(Dictionary,
+                                    me->pRootDomain->getPropertyTable());
+    if(cur) {
+        // setPropertyTable releases current Dictionary when a new one is set
+        cur->retain();
+        me->pRootDomain->setPropertyTable(cur->getBaseDictionary());
+        cur->release();
+    }
+    return kIOReturnSuccess;
+}
+
+void
+DisableSleep::sleepDisabledChanged(OSObject              *target,
+                                   const Dictionary      *aDictionary,
+                                   const OSSymbol        *aKey,
+                                   const OSMetaClassBase *aValue)
+{
+    DisableSleep *me = (DisableSleep*)target;
+    if(aValue != kOSBooleanTrue)
+        me->sleepDisabledDictionarySetting(true);
 }
