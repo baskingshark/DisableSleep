@@ -211,6 +211,7 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 0.1.1;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -249,6 +250,7 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
+				CURRENT_PROJECT_VERSION = 0.1.1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -269,12 +271,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 0.1.0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "DisableSleep/DisableSleep-Prefix.pch";
 				INFOPLIST_FILE = "DisableSleep/DisableSleep-Info.plist";
 				MODULE_NAME = github.sheeparegreat.DisableSleep;
-				MODULE_VERSION = 0.1.0;
+				MODULE_VERSION = "${CURRENT_PROJECT_VERSION}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VERSIONING_SYSTEM = "";
 				WRAPPER_EXTENSION = kext;
@@ -285,12 +286,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 0.1.0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "DisableSleep/DisableSleep-Prefix.pch";
 				INFOPLIST_FILE = "DisableSleep/DisableSleep-Info.plist";
 				MODULE_NAME = github.sheeparegreat.DisableSleep;
-				MODULE_VERSION = 0.1.0;
+				MODULE_VERSION = "${CURRENT_PROJECT_VERSION}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VERSIONING_SYSTEM = "";
 				WRAPPER_EXTENSION = kext;
