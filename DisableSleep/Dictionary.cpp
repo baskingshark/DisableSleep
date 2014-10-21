@@ -3,6 +3,7 @@
 //  DisableSleep
 //
 
+#include <IOKit/IOTypes.h>
 #include <libkern/c++/OSSymbol.h>
 #include "Dictionary.h"
 
@@ -41,7 +42,7 @@ void Dictionary::removeObject(const OSSymbol *aKey)
     original->removeObject(aKey);
 
     if(cb && isSleepDisabled(aKey))
-        cb(target, this, aKey, nullptr);
+        cb(target, this, aKey, NULL);
 }
 
 OSDictionary* Dictionary::getBaseDictionary()
@@ -54,13 +55,13 @@ Dictionary *Dictionary::withDictionary(const OSDictionary *dict,
                                        OSObject           *target)
 {
     if(!dict)
-        return nullptr;
+        return NULL;
 
     Dictionary *me = new Dictionary;
     if(me) {
         if(!me->initWithDictionary(dict, dict->getCapacity())) {
             me->release();
-            return nullptr;
+            return NULL;
         }
         else {
             me->cb = cb;
